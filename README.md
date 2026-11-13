@@ -16,6 +16,8 @@
 
 ## صفحة التقييم
 
+رابط الصفحة: [kamalyaser31.github.io/quran-guides-checklist](https://kamalyaser31.github.io/quran-guides-checklist/)
+
 [index.html](index.html) صفحة واحدة تقرأ البنود من `checklist.md` مباشرة، فكل تعديل في الملف يظهر فيها دون خطوة أخرى:
 
 1. اختر نوع الحصة: درس حكم جديد، أو حصة تسميع ومراجعة؛ فتظهر الأقسام التي تخصها وحدها.

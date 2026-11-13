@@ -31,10 +31,11 @@ def check(condition, message, failures):
 def main():
     parser = argparse.ArgumentParser(description="Check index.html in Chromium.")
     parser.add_argument("--browser", help="path to a Chromium executable")
+    parser.add_argument("--url", help="test a published page instead of a local one")
     args = parser.parse_args()
     failures = []
     server = serve()
-    url = f"http://127.0.0.1:{server.server_port}/index.html"
+    url = args.url or f"http://127.0.0.1:{server.server_port}/index.html"
     try:
         with sync_playwright() as p:
             # An explicit path lets an older installed Chromium stand in when

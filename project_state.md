@@ -28,4 +28,8 @@
 ## المعلّق
 
 - لم يُختبر بقارئ الشاشة NVDA حياً.
-- لا remote على GitHub ولا نشر على Pages بعد.
+
+## النشر
+
+- المستودع: `kamalyaser31/quran-guides-checklist` (عام)، والفرع `master`.
+- Pages من جذر `master`: https://kamalyaser31.github.io/quran-guides-checklist/ ، فكل push إلى `master` ينشر.
