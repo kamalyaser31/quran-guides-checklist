@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>قائمة فنيات الحصة</title>
+  <script src="https://cdn.tailwindcss.com/3.4.5"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+  <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="bg-white text-slate-900 leading-relaxed">
+  <main class="max-w-3xl mx-auto px-4 py-6" x-data="checklistApp()" x-init="load()">
+    <h1 class="text-2xl font-bold mb-2">قائمة فنيات الحصة الاحترافية</h1>
+    <p class="mb-4">علِّم على ما استوفيته في حصتك، ثم اضغط «عرض التقييم». النسبة تُحسب على البنود الأساسية وحدها.</p>
+    <a href="#submit-button" class="underline text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-400 rounded">انتقل إلى زر عرض التقييم</a>
+
+    <p x-show="loading" class="mt-4">جارٍ تحميل القائمة…</p>
+    <p x-show="error" x-cloak role="alert" class="mt-4 p-3 border-2 border-red-700 text-red-800 rounded" x-text="error"></p>
+
+    <form x-show="!loading && !error" x-cloak class="mt-6" @submit.prevent="showResult()">
+      <fieldset class="mb-6 p-4 border-2 border-slate-400 rounded">
+        <legend class="px-2 font-bold text-lg">نوع الحصة</legend>
+        <div class="flex flex-wrap gap-6">
+          <label class="flex items-center gap-2">
+            <input type="radio" name="session-type" value="lesson" x-model="sessionType" class="w-5 h-5 focus:ring-4 focus:ring-blue-400">
+            درس حكم جديد
+          </label>
+          <label class="flex items-center gap-2">
+            <input type="radio" name="session-type" value="review" x-model="sessionType" class="w-5 h-5 focus:ring-4 focus:ring-blue-400">
+            حصة تسميع ومراجعة
+          </label>
+        </div>
+      </fieldset>
+
+      <template x-for="section in visibleSections" :key="section.code">
+        <section class="mb-8" :aria-labelledby="'heading-' + section.code">
+          <h2 class="text-xl font-bold mb-3 border-b-2 border-slate-300 pb-1" :id="'heading-' + section.code" x-text="section.number + '. ' + section.title"></h2>
+          <template x-for="group in section.groups" :key="section.code + group.title">
+            <div class="mb-4">
+              <h3 x-show="group.title" class="text-lg font-semibold mb-2" x-text="group.title"></h3>
+              <ul class="space-y-3">
+                <template x-for="item in group.items" :key="item.id">
+                  <li class="flex items-start gap-3">
+                    <input type="checkbox" class="mt-1 w-5 h-5 shrink-0 focus:ring-4 focus:ring-blue-400"
+                      :id="'item-' + item.id" :value="item.id" x-model="checked"
+                      :aria-describedby="'hint-' + item.id">
+                    <div>
+                      <label :for="'item-' + item.id">
+                        <span x-text="item.id + '. ' + item.text"></span>
+                        <span class="text-sm font-semibold" :class="item.core ? 'text-emerald-800' : 'text-slate-700'" x-text="item.core ? '(أساسي)' : '(عند الحاجة)'"></span>
+                      </label>
+                      <p class="text-sm text-slate-700" :id="'hint-' + item.id" x-text="describe(item)"></p>
+                    </div>
+                  </li>
+                </template>
+              </ul>
+            </div>
+          </template>
+        </section>
+      </template>
+
+      <div class="flex flex-wrap gap-4 mt-6">
+        <button id="submit-button" type="submit" class="px-5 py-2 bg-blue-800 text-white font-bold rounded focus:outline-none focus:ring-4 focus:ring-blue-400">عرض التقييم</button>
+        <button type="button" @click="reset()" class="px-5 py-2 border-2 border-slate-700 font-bold rounded focus:outline-none focus:ring-4 focus:ring-blue-400">تقييم جديد</button>
+      </div>
+    </form>
+
+    <section x-show="result" x-cloak x-ref="result" tabindex="-1" aria-labelledby="result-heading" class="mt-8 p-4 border-2 border-blue-800 rounded focus:outline-none focus:ring-4 focus:ring-blue-400">
+      <template x-if="result">
+        <div>
+          <h2 id="result-heading" class="text-xl font-bold mb-2" x-text="'التقييم: ' + result.percent + '٪ (' + result.grade + ')'"></h2>
+          <p x-text="'استوفيت ' + result.coreDone + ' من ' + result.coreTotal + ' بنداً أساسياً، و' + result.optionalDone + ' من بنود «عند الحاجة».'"></p>
+          <h3 class="text-lg font-semibold mt-4 mb-1">حسب القسم</h3>
+          <ul class="list-disc pr-6">
+            <template x-for="row in result.sections" :key="row.code">
+              <li x-text="row.title + ': ' + row.done + ' من ' + row.total + ' (' + row.percent + '٪)'"></li>
+            </template>
+          </ul>
+          <h3 class="text-lg font-semibold mt-4 mb-1">بنود أساسية فاتتك</h3>
+          <p x-show="result.missed.length === 0">لم يفتك بند أساسي.</p>
+          <ul x-show="result.missed.length > 0" class="list-disc pr-6">
+            <template x-for="item in result.missed" :key="item.id">
+              <li x-text="item.id + '. ' + item.text"></li>
+            </template>
+          </ul>
+        </div>
+      </template>
+    </section>
+  </main>
+
+  <script>
+    // Section numbers each session type is assessed on, as stated in checklist.md.
+    const SESSION_SECTIONS = { lesson: [1, 2, 3, 4, 6], review: [1, 3, 4, 5, 6] };
+
+    const SECTION_RE = /^## (\d+)\. (.+?) \(([A-Z])\)\s*$/u;
+    const OTHER_SECTION_RE = /^## /u;
+    const SUBSECTION_RE = /^### \d+\.\d+ (.+?)\s*$/u;
+    const ITEM_RE = /^- \[ \] \*\*([A-Z]\d+)\.\*\* (.+?) \*\((.+?)\)\*\s*$/u;
+    const HINT_RE = /^\s+- تلميح: (.+?)\s*$/u;
+
+    function clean(text) {
+      return text.replace(/[\u0000-\u0008\u000b-\u001f\u007f]/gu, '').replace(/\s+/gu, ' ').trim();
+    }
+
+    function parseChecklist(markdown) {
+      const sections = [];
+      let section = null;
+      let item = null;
+      for (const line of markdown.replace(/^﻿/u, '').split(/\r?\n/u)) {
+        let match = line.match(SECTION_RE);
+        if (match) {
+          section = { number: Number(match[1]), title: clean(match[2]), code: match[3], groups: [{ title: '', items: [] }] };
+          sections.push(section);
+          item = null;
+          continue;
+        }
+        if (OTHER_SECTION_RE.test(line)) { section = null; item = null; continue; }
+        if (!section) continue;
+        match = line.match(SUBSECTION_RE);
+        if (match) {
+          section.groups.push({ title: clean(match[1]), items: [] });
+          item = null;
+          continue;
+        }
+        match = line.match(ITEM_RE);
+        if (match) {
+          const tags = match[3].split('،').map(clean);
+          item = { id: match[1], text: clean(match[2]), core: tags[0] === 'أساسي', sources: tags.slice(1), hint: '' };
+          section.groups[section.groups.length - 1].items.push(item);
+          continue;
+        }
+        match = line.match(HINT_RE);
+        if (match && item) item.hint = clean(match[1]);
+      }
+      for (const s of sections) s.groups = s.groups.filter((g) => g.items.length > 0);
+      return sections;
+    }
+
+    function sourceLabel(code) {
+      if (/^م\d+$/u.test(code)) return 'المحاضرة ' + code.slice(1);
+      if (code === 'Oct') return 'محاضرة Octalysis';
+      if (code === 'إضافة') return 'إضافة من خارج المحاضرات';
+      return code;
+    }
+
+    function gradeFor(percent) {
+      if (percent >= 90) return 'ممتاز';
+      if (percent >= 80) return 'جيد جداً';
+      if (percent >= 65) return 'جيد';
+      if (percent >= 50) return 'مقبول';
+      return 'يحتاج إلى تحسين';
+    }
+
+    function checklistApp() {
+      return {
+        loading: true,
+        error: '',
+        sections: [],
+        sessionType: 'lesson',
+        checked: [],
+        result: null,
+
+        async load() {
+          try {
+            const response = await fetch('checklist.md', { cache: 'no-cache' });
+            if (!response.ok) throw new Error(response.status);
+            this.sections = parseChecklist(await response.text());
+            if (this.sections.length === 0) throw new Error('empty');
+          } catch (e) {
+            this.error = 'تعذّر تحميل ملف القائمة checklist.md. افتح الصفحة من GitHub Pages أو من خادم محلي، لا من الملف مباشرة.';
+          } finally {
+            this.loading = false;
+          }
+          this.$watch('checked', () => { this.result = null; });
+          this.$watch('sessionType', () => { this.result = null; });
+        },
+
+        get visibleSections() {
+          const numbers = SESSION_SECTIONS[this.sessionType];
+          return this.sections.filter((s) => numbers.includes(s.number));
+        },
+
+        describe(item) {
+          const source = 'المصدر: ' + item.sources.map(sourceLabel).join('، ') + '.';
+          return item.hint ? item.hint + ' ' + source : source;
+        },
+
+        showResult() {
+          const done = new Set(this.checked);
+          let coreDone = 0, coreTotal = 0, optionalDone = 0;
+          const rows = [], missed = [];
+          for (const section of this.visibleSections) {
+            const items = section.groups.flatMap((g) => g.items);
+            const core = items.filter((i) => i.core);
+            const sectionDone = core.filter((i) => done.has(i.id)).length;
+            coreDone += sectionDone;
+            coreTotal += core.length;
+            optionalDone += items.filter((i) => !i.core && done.has(i.id)).length;
+            missed.push(...core.filter((i) => !done.has(i.id)));
+            rows.push({
+              code: section.code, title: section.title, done: sectionDone, total: core.length,
+              percent: core.length ? Math.round((sectionDone / core.length) * 100) : 100,
+            });
+          }
+          const percent = coreTotal ? Math.round((coreDone / coreTotal) * 100) : 0;
+          this.result = { percent, grade: gradeFor(percent), coreDone, coreTotal, optionalDone, sections: rows, missed };
+          this.$nextTick(() => this.$refs.result.focus());
+        },
+
+        reset() {
+          if (!window.confirm('هل تمسح كل العلامات وتبدأ تقييماً جديداً؟')) return;
+          this.checked = [];
+          this.result = null;
+          this.$nextTick(() => document.querySelector('input[name="session-type"]:checked').focus());
+        },
+      };
+    }
+  </script>
+</body>
+</html>
