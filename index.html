@@ -47,8 +47,8 @@
         <summary class="cursor-pointer py-3 px-4 font-semibold text-mushafdark">عن القائمة وطريقة بنائها</summary>
         <div class="px-4 pb-4 text-lg leading-relaxed">
           <ul class="space-y-3">
-            <li><strong>الشمول:</strong> 88 بنداً مستخلصة من ملخصات المحاضرات الست ومحاضرة Octalysis في مبادرة «صناعة النخبة». تحت كل بند المحاضرة التي أُخذ منها، والبنود الخمسة التي من خارج الملخصات موسومة «إضافة».</li>
-            <li><strong>التقسيم:</strong> ثمانية أقسام في خمس طبقات، لكل قسم نطاق واحد: «كل حصة»، و«الدرس الجديد»، و«درس التجويد»، و«درس الدراسات الإسلامية»، و«حصة التسميع». والأقسام على زمن الحصة: التحضير، ثم أثناءها، ثم بعدها. فلا يختلط ما يخص مادةً بما يلزم كل حصة، ولا يُحاسَب معلم التسميع على بنود الشرح.</li>
+            <li><strong>الشمول:</strong> 90 بنداً مستخلصة من ملخصات المحاضرات الست ومحاضرة Octalysis في مبادرة «صناعة النخبة». تحت كل بند المحاضرة التي أُخذ منها، والبنود الخمسة التي من خارج الملخصات موسومة «إضافة».</li>
+            <li><strong>التقسيم:</strong> تسعة أقسام، لكل قسم نطاق واحد وتكرار واحد. فقسم «مرة واحدة» لما يُعرف عن الطالب ويُجهَّز عند أول حصة معه، ولا يظهر إلا بخانة «هذه أول حصة مع هذا الطالب». وسائرها في خمس طبقات: «كل حصة»، و«الدرس الجديد»، و«درس التجويد»، و«درس الدراسات الإسلامية»، و«حصة التسميع»، على زمن الحصة: التحضير، ثم أثناءها، ثم بعدها؛ وما يُفعل دورياً منفصل عما يُفعل كل حصة. فلا يختلط ما يخص مادةً بما يلزم كل حصة، ولا يُحاسَب المعلم كل حصة على ما يُفعل مرة.</li>
             <li><strong>سهولة الاستخدام:</strong> يختار المعلم نوع حصته فتظهر أقسامها وحدها، والبنود الأساسية أولاً في كل قائمة. والنسبة على الأساسي وحده، فلا يُنقص من نسبة المعلم بندٌ «عند الحاجة» لم تقتضه حصته. والنتيجة تذكر نسبة كل قسم والبنود الأساسية التي فاتت.</li>
             <li><strong>التوظيف العملي:</strong> كل بند فعلٌ قصير يُحكم عليه بنظرة، وتحته تلميح فيه مثال. تُقرأ القائمة قبل الحصة للتحضير، ويُعلَّم عليها بعدها للتقويم. ولا يدخلها ما هو صفة في المعلم أو نية لا تُرى.</li>
           </ul>
@@ -78,6 +78,14 @@
           </label>
         </div>
       </fieldset>
+
+      <div class="-mt-6 mb-10 flex items-start gap-4">
+        <input type="checkbox" id="first-session" x-model="firstSession" aria-describedby="first-session-hint" class="mt-2 w-6 h-6 shrink-0 cursor-pointer">
+        <div>
+          <label for="first-session" class="cursor-pointer font-semibold">هذه أول حصة مع هذا الطالب</label>
+          <p id="first-session-hint" class="text-lg text-muted leading-relaxed">يظهر قسم «مرة واحدة»: معرفة الطالب والتجهيز، ويدخل في النسبة.</p>
+        </div>
+      </div>
 
       <template x-for="section in visibleSections" :key="section.code">
         <section class="mb-14" :aria-labelledby="'heading-' + section.code">
@@ -156,10 +164,12 @@
   <script>
     // Section numbers each session type is assessed on, as stated in checklist.md.
     const SESSION_SECTIONS = {
-      lesson: [1, 2, 3, 5, 7, 8], islamic: [1, 2, 4, 5, 7, 8], review: [1, 6, 7, 8],
+      lesson: [2, 3, 4, 6, 8, 9], islamic: [2, 3, 5, 6, 8, 9], review: [2, 7, 8, 9],
     };
 
-    const SECTION_RE = /^## (\d+)\. (.+?) \(([A-Z])\)\s*$/u;
+    // The once-per-student section joins any session type on the first session.
+    const FIRST_SESSION_SECTION = 1;
+    const SECTION_RE =/^## (\d+)\. (.+?) \(([A-Z])\)\s*$/u;
     const OTHER_SECTION_RE = /^## /u;
     const SUBSECTION_RE = /^### \d+\.\d+ (.+?)\s*$/u;
     const ITEM_RE = /^- \[ \] \*\*([A-Z]\d+)\.\*\* (.+?) \*\((.+?)\)\*\s*$/u;
@@ -229,6 +239,7 @@
         error: '',
         sections: [],
         sessionType: 'lesson',
+        firstSession: false,
         checked: [],
         result: null,
 
@@ -245,10 +256,12 @@
           }
           this.$watch('checked', () => { this.result = null; });
           this.$watch('sessionType', () => { this.result = null; });
+          this.$watch('firstSession', () => { this.result = null; });
         },
 
         get visibleSections() {
-          const numbers = SESSION_SECTIONS[this.sessionType];
+          const numbers = (this.firstSession ? [FIRST_SESSION_SECTION] : [])
+            .concat(SESSION_SECTIONS[this.sessionType]);
           return this.sections.filter((s) => numbers.includes(s.number));
         },
 
@@ -288,6 +301,7 @@
         reset() {
           if (!window.confirm('هل تمسح كل العلامات وتبدأ تقييماً جديداً؟')) return;
           this.checked = [];
+          this.firstSession = false;
           this.result = null;
           this.$nextTick(() => document.querySelector('input[name="session-type"]:checked').focus());
         },

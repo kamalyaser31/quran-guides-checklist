@@ -10,7 +10,9 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parent
-EXPECTED = {"lesson": (76, 39), "islamic": (63, 34), "review": (45, 24)}
+EXPECTED = {"lesson": (74, 38), "islamic": (61, 33), "review": (43, 23)}
+# Items and core items the once-per-student section adds on a first session.
+FIRST_SESSION_EXTRA = (4, 2)
 
 
 def serve():
@@ -89,8 +91,17 @@ def main():
                     f"{session}: core items come first in each list",
                     failures,
                 )
-                boxes = page.locator("input[type=checkbox]")
+                boxes = page.locator("li.item input[type=checkbox]")
                 check(boxes.count() == items, f"{session}: {items} items", failures)
+                page.check("#first-session")
+                extra_items, extra_core = FIRST_SESSION_EXTRA
+                check(
+                    boxes.count() == items + extra_items
+                    and page.locator("li[data-core=true]").count() == core + extra_core,
+                    f"{session}: first session adds {extra_items} items",
+                    failures,
+                )
+                page.uncheck("#first-session")
                 core_boxes = page.locator("li[data-core=true] input[type=checkbox]")
                 check(core_boxes.count() == core, f"{session}: {core} core", failures)
                 for i in range(core_boxes.count()):
