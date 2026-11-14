@@ -36,6 +36,12 @@ def take_screenshots(browser, url, folder):
         page.wait_for_selector("input[type=checkbox]")
         page.wait_for_timeout(800)
         page.screenshot(path=str(folder / f"{name}-top.png"))
+        page.click("summary")
+        page.screenshot(path=str(folder / f"{name}-memo.png"))
+        page.click("summary")
+        page.locator("#item-L6").focus()
+        page.keyboard.press("Tab")
+        page.screenshot(path=str(folder / f"{name}-focus.png"))
         boxes = page.locator("li[data-core=true] input[type=checkbox]")
         for i in range(0, boxes.count(), 2):
             boxes.nth(i).check()

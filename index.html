@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>قائمة فنيات الحصة</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230E5B55'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11' stroke='white' stroke-width='3.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Markazi+Text:wght@400;600&family=Reem+Kufi:wght@500;700&display=swap" rel="stylesheet">
@@ -27,6 +28,11 @@
     :focus-visible { outline: 3px solid #8A5A12; outline-offset: 3px; }
     input[type=checkbox] { accent-color: #0E5B55; }
     li.item:has(input:checked) { background: #E4EEEB; }
+    /* Isolate Latin runs so their brackets and periods keep their place in Arabic lines. */
+    .latin { unicode-bidi: isolate; white-space: nowrap; }
+    /* Keep focused controls clear of the fixed bottom bar. */
+    html { scroll-padding-bottom: 7rem; scroll-padding-top: 1rem; }
+    summary::marker { color: #0E5B55; }
     .bar-fill { transition: width 600ms ease-out; }
     @media (prefers-reduced-motion: reduce) { .bar-fill { transition: none; } }
   </style>
@@ -37,6 +43,18 @@
       <h1 class="font-kufi text-3xl sm:text-4xl font-bold text-mushafdark leading-snug">قائمة فنيات الحصة الاحترافية</h1>
       <p class="mt-3 text-muted">علِّم على ما استوفيته في حصتك، ثم اضغط «عرض التقييم». النسبة على البنود الأساسية وحدها.</p>
       <a href="#submit-button" class="inline-block mt-2 text-lg text-mushaf underline underline-offset-4">انتقل إلى زر عرض التقييم</a>
+      <details class="mt-6 border-r-4 border-mushaf bg-white/70 rounded-l-lg">
+        <summary class="cursor-pointer py-3 px-4 font-semibold text-mushafdark">عن القائمة وطريقة بنائها</summary>
+        <div class="px-4 pb-4 text-lg leading-relaxed">
+          <ul class="space-y-3">
+            <li><strong>الشمول:</strong> 84 بنداً مستخلصة من ملخصات المحاضرات الست ومحاضرة Octalysis في مبادرة «صناعة النخبة». تحت كل بند المحاضرة التي أُخذ منها، والبنود الخمسة التي من خارج الملخصات موسومة «إضافة».</li>
+            <li><strong>التقسيم:</strong> سبعة أقسام في أربع طبقات، لكل قسم نطاق واحد: «كل حصة»، و«الدرس الجديد»، و«درس التجويد»، و«حصة التسميع». والأقسام على زمن الحصة: التحضير، ثم أثناءها، ثم بعدها. فلا يختلط ما يخص التجويد بما يلزم كل حصة، ولا يُحاسَب معلم التسميع على بنود الشرح.</li>
+            <li><strong>سهولة الاستخدام:</strong> يختار المعلم نوع حصته فتظهر أقسامها وحدها، والبنود الأساسية أولاً في كل قائمة. والنسبة على الأساسي وحده، فلا يُنقص من نسبة المعلم بندٌ «عند الحاجة» لم تقتضه حصته. والنتيجة تذكر نسبة كل قسم والبنود الأساسية التي فاتت.</li>
+            <li><strong>التوظيف العملي:</strong> كل بند فعلٌ قصير يُحكم عليه بنظرة، وتحته تلميح فيه مثال. تُقرأ القائمة قبل الحصة للتحضير، ويُعلَّم عليها بعدها للتقويم. ولا يدخلها ما هو صفة في المعلم أو نية لا تُرى.</li>
+          </ul>
+          <p class="mt-4 text-muted">إعداد: كمال ياسر</p>
+        </div>
+      </details>
     </header>
 
     <p x-show="loading">جارٍ تحميل القائمة…</p>
@@ -76,11 +94,11 @@
                       :aria-describedby="'hint-' + item.id">
                     <div>
                       <label :for="'item-' + item.id" class="cursor-pointer">
-                        <span x-text="item.text"></span>
+                        <template x-for="(part, i) in parts(item.text)" :key="i"><span :dir="part.ltr ? 'ltr' : null" :class="part.ltr && 'latin'" x-text="part.text"></span></template>
                         <span class="whitespace-nowrap text-base font-semibold ms-1" :class="item.core ? 'text-ochre' : 'text-muted'" x-text="item.core ? '(أساسي)' : '(عند الحاجة)'"></span>
                       </label>
                       <p class="text-lg text-muted leading-relaxed" :id="'hint-' + item.id">
-                        <span x-text="item.id + '. '"></span><span x-text="describe(item)"></span>
+                        <span dir="ltr" class="latin" x-text="item.id"></span><span>. </span><template x-for="(part, i) in parts(describe(item))" :key="i"><span :dir="part.ltr ? 'ltr' : null" :class="part.ltr && 'latin'" x-text="part.text"></span></template>
                       </p>
                     </div>
                   </li>
@@ -123,7 +141,7 @@
           <p x-show="result.missed.length === 0">لم يفتك بند أساسي.</p>
           <ul x-show="result.missed.length > 0" class="space-y-2 list-disc pr-6 marker:text-ochre">
             <template x-for="item in result.missed" :key="item.id">
-              <li x-text="item.id + '. ' + item.text"></li>
+              <li><span dir="ltr" class="latin" x-text="item.id"></span><span>. </span><template x-for="(part, i) in parts(item.text)" :key="i"><span :dir="part.ltr ? 'ltr' : null" :class="part.ltr && 'latin'" x-text="part.text"></span></template></li>
             </template>
           </ul>
         </div>
@@ -139,7 +157,8 @@
     const OTHER_SECTION_RE = /^## /u;
     const SUBSECTION_RE = /^### \d+\.\d+ (.+?)\s*$/u;
     const ITEM_RE = /^- \[ \] \*\*([A-Z]\d+)\.\*\* (.+?) \*\((.+?)\)\*\s*$/u;
-    const HINT_RE = /^\s+- تلميح: (.+?)\s*$/u;
+    const LATIN_BRACKETS_RE = /(\([^()؀-ۿ]+\))/u;
+    const HINT_RE =/^\s+- تلميح: (.+?)\s*$/u;
 
     function clean(text) {
       return text.replace(/[\u0000-\u0008\u000b-\u001f\u007f]/gu, '').replace(/\s+/gu, ' ').trim();
@@ -225,6 +244,12 @@
         get visibleSections() {
           const numbers = SESSION_SECTIONS[this.sessionType];
           return this.sections.filter((s) => numbers.includes(s.number));
+        },
+
+        // Splits out bracketed Latin terms, e.g. "(Concept First)", to render them isolated.
+        parts(text) {
+          return text.split(LATIN_BRACKETS_RE).filter(Boolean)
+            .map((piece) => ({ text: piece, ltr: LATIN_BRACKETS_RE.test(piece) }));
         },
 
         describe(item) {
