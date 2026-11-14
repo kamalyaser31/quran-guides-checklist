@@ -10,7 +10,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parent
-EXPECTED = {"lesson": (76, 39), "review": (45, 24)}
+EXPECTED = {"lesson": (76, 39), "islamic": (63, 34), "review": (45, 24)}
 
 
 def serve():

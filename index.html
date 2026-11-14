@@ -47,8 +47,8 @@
         <summary class="cursor-pointer py-3 px-4 font-semibold text-mushafdark">عن القائمة وطريقة بنائها</summary>
         <div class="px-4 pb-4 text-lg leading-relaxed">
           <ul class="space-y-3">
-            <li><strong>الشمول:</strong> 84 بنداً مستخلصة من ملخصات المحاضرات الست ومحاضرة Octalysis في مبادرة «صناعة النخبة». تحت كل بند المحاضرة التي أُخذ منها، والبنود الخمسة التي من خارج الملخصات موسومة «إضافة».</li>
-            <li><strong>التقسيم:</strong> سبعة أقسام في أربع طبقات، لكل قسم نطاق واحد: «كل حصة»، و«الدرس الجديد»، و«درس التجويد»، و«حصة التسميع». والأقسام على زمن الحصة: التحضير، ثم أثناءها، ثم بعدها. فلا يختلط ما يخص التجويد بما يلزم كل حصة، ولا يُحاسَب معلم التسميع على بنود الشرح.</li>
+            <li><strong>الشمول:</strong> 88 بنداً مستخلصة من ملخصات المحاضرات الست ومحاضرة Octalysis في مبادرة «صناعة النخبة». تحت كل بند المحاضرة التي أُخذ منها، والبنود الخمسة التي من خارج الملخصات موسومة «إضافة».</li>
+            <li><strong>التقسيم:</strong> ثمانية أقسام في خمس طبقات، لكل قسم نطاق واحد: «كل حصة»، و«الدرس الجديد»، و«درس التجويد»، و«درس الدراسات الإسلامية»، و«حصة التسميع». والأقسام على زمن الحصة: التحضير، ثم أثناءها، ثم بعدها. فلا يختلط ما يخص مادةً بما يلزم كل حصة، ولا يُحاسَب معلم التسميع على بنود الشرح.</li>
             <li><strong>سهولة الاستخدام:</strong> يختار المعلم نوع حصته فتظهر أقسامها وحدها، والبنود الأساسية أولاً في كل قائمة. والنسبة على الأساسي وحده، فلا يُنقص من نسبة المعلم بندٌ «عند الحاجة» لم تقتضه حصته. والنتيجة تذكر نسبة كل قسم والبنود الأساسية التي فاتت.</li>
             <li><strong>التوظيف العملي:</strong> كل بند فعلٌ قصير يُحكم عليه بنظرة، وتحته تلميح فيه مثال. تُقرأ القائمة قبل الحصة للتحضير، ويُعلَّم عليها بعدها للتقويم. ولا يدخلها ما هو صفة في المعلم أو نية لا تُرى.</li>
           </ul>
@@ -63,10 +63,14 @@
     <form x-show="!loading && !error" x-cloak @submit.prevent="showResult()">
       <fieldset class="mb-10">
         <legend class="text-xl font-semibold text-muted mb-3">نوع الحصة</legend>
-        <div class="grid grid-cols-2 gap-2 p-1 bg-wash rounded-xl">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 p-1 bg-wash rounded-xl">
           <label class="block">
             <input type="radio" name="session-type" value="lesson" x-model="sessionType" class="peer sr-only">
             <span class="block text-center py-2 px-3 rounded-lg cursor-pointer peer-checked:bg-mushaf peer-checked:text-white peer-checked:font-semibold peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-ochre peer-focus-visible:outline-offset-2">درس تجويد</span>
+          </label>
+          <label class="block">
+            <input type="radio" name="session-type" value="islamic" x-model="sessionType" class="peer sr-only">
+            <span class="block text-center py-2 px-3 rounded-lg cursor-pointer peer-checked:bg-mushaf peer-checked:text-white peer-checked:font-semibold peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-ochre peer-focus-visible:outline-offset-2">درس دراسات إسلامية</span>
           </label>
           <label class="block">
             <input type="radio" name="session-type" value="review" x-model="sessionType" class="peer sr-only">
@@ -151,7 +155,9 @@
 
   <script>
     // Section numbers each session type is assessed on, as stated in checklist.md.
-    const SESSION_SECTIONS = { lesson: [1, 2, 3, 4, 6, 7], review: [1, 5, 6, 7] };
+    const SESSION_SECTIONS = {
+      lesson: [1, 2, 3, 5, 7, 8], islamic: [1, 2, 4, 5, 7, 8], review: [1, 6, 7, 8],
+    };
 
     const SECTION_RE = /^## (\d+)\. (.+?) \(([A-Z])\)\s*$/u;
     const OTHER_SECTION_RE = /^## /u;
