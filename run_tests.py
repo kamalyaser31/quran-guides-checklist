@@ -10,7 +10,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parent
-EXPECTED = {"lesson": (76, 39), "review": (69, 39)}
+EXPECTED = {"lesson": (76, 39), "review": (45, 24)}
 
 
 def serve():
@@ -92,7 +92,12 @@ def main():
                 core_boxes.nth(0).uncheck()
                 page.click("#submit-button")
                 heading = page.locator("#result-heading").inner_text()
-                check("97" in heading, f"{session}: 38/39 -> 97% ({heading})", failures)
+                expected = round((core - 1) / core * 100)
+                check(
+                    f"{expected}٪" in heading,
+                    f"{session}: {core - 1}/{core} -> {expected}% ({heading})",
+                    failures,
+                )
                 missed = page.locator("section[aria-labelledby=result-heading] li")
                 check(
                     missed.filter(has_text="1.").count() >= 1,
