@@ -175,7 +175,11 @@
         match = line.match(HINT_RE);
         if (match && item) item.hint = clean(match[1]);
       }
-      for (const s of sections) s.groups = s.groups.filter((g) => g.items.length > 0);
+      for (const s of sections) {
+        s.groups = s.groups.filter((g) => g.items.length > 0);
+        // Core items lead each list; the stable sort keeps the file order within each kind.
+        for (const g of s.groups) g.items.sort((a, b) => Number(b.core) - Number(a.core));
+      }
       return sections;
     }
 

@@ -71,6 +71,18 @@ def main():
             for session, (items, core) in EXPECTED.items():
                 # The radios are visually hidden; users click their labels.
                 page.click(f"label:has(input[value={session}])")
+                core_after_optional = page.evaluate(
+                    """() => [...document.querySelectorAll('li.item')]
+                      .filter((li) => li.dataset.core === 'true'
+                        && li.previousElementSibling
+                        && li.previousElementSibling.dataset.core === 'false')
+                      .length"""
+                )
+                check(
+                    core_after_optional == 0,
+                    f"{session}: core items come first in each list",
+                    failures,
+                )
                 boxes = page.locator("input[type=checkbox]")
                 check(boxes.count() == items, f"{session}: {items} items", failures)
                 core_boxes = page.locator("li[data-core=true] input[type=checkbox]")
