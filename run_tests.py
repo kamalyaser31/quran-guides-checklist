@@ -28,10 +28,32 @@ def check(condition, message, failures):
         failures.append(message)
 
 
+def take_screenshots(browser, url, folder):
+    folder.mkdir(parents=True, exist_ok=True)
+    for name, width in (("desktop", 1280), ("mobile", 390)):
+        page = browser.new_page(viewport={"width": width, "height": 900})
+        page.goto(url)
+        page.wait_for_selector("input[type=checkbox]")
+        page.wait_for_timeout(800)
+        page.screenshot(path=str(folder / f"{name}-top.png"))
+        boxes = page.locator("li[data-core=true] input[type=checkbox]")
+        for i in range(0, boxes.count(), 2):
+            boxes.nth(i).check()
+        page.locator("#item-P2").focus()
+        page.screenshot(path=str(folder / f"{name}-items.png"))
+        page.click("#submit-button")
+        page.wait_for_timeout(900)
+        page.screenshot(path=str(folder / f"{name}-result.png"))
+        page.close()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Check index.html in Chromium.")
     parser.add_argument("--browser", help="path to a Chromium executable")
     parser.add_argument("--url", help="test a published page instead of a local one")
+    parser.add_argument(
+        "--screenshots", type=Path, help="save desktop and mobile screenshots here"
+    )
     args = parser.parse_args()
     failures = []
     server = serve()
@@ -44,13 +66,14 @@ def main():
             page = browser.new_page()
             page.goto(url)
             page.wait_for_selector("input[type=checkbox]")
+            if args.screenshots:
+                take_screenshots(browser, url, args.screenshots)
             for session, (items, core) in EXPECTED.items():
-                page.check(f"input[name=session-type][value={session}]")
+                # The radios are visually hidden; users click their labels.
+                page.click(f"label:has(input[value={session}])")
                 boxes = page.locator("input[type=checkbox]")
                 check(boxes.count() == items, f"{session}: {items} items", failures)
-                core_boxes = page.locator(
-                    "li:has(span:text-is('(أساسي)')) input[type=checkbox]"
-                )
+                core_boxes = page.locator("li[data-core=true] input[type=checkbox]")
                 check(core_boxes.count() == core, f"{session}: {core} core", failures)
                 for i in range(core_boxes.count()):
                     core_boxes.nth(i).check()
